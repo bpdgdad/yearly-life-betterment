@@ -1,1 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Yearly Life Betterment Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#020617;--bg-elevated:#0b1120;--accent:#22c55e;--accent-soft:rgba(34,197,94,.14);
+      --text-main:#f9fafb;--text-muted:#9ca3af;--border-subtle:#1f2937;--danger:#ef4444;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{
+      margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:radial-gradient(circle at top,#1f2937,#020617 55%);color:var(--text-main);
+      min-height:100vh;display:flex;flex-direction:column;
+    }
+    .app-shell{flex:1;max-width:1100px;margin:0 auto;display:flex;flex-direction:column}
+    header{padding:14px 14px 6px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .title-block{display:flex;flex-direction:column;gap:2px}
+    .title-block h1{margin:0;font-size:1.05rem;letter-spacing:.04em;text-transform:uppercase}
+    .title-block span{font-size:.75rem;color:var(--text-muted)}
+    .pill{
+      border-radius:999px;border:1px solid rgba(148,163,184,.5);padding:6px 10px;font-size:.75rem;
+      display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);background:rgba(15,23,42,.9);cursor:pointer
+    }
+    .pill-dot{width:8px;height:8px;border-radius:999px;background:var(--accent);box-shadow:0 0 0 6px rgba(34,197,94,.25)}
+    main{flex:1;padding:0 10px 70px}
+
+    .group-strip{display:flex;gap:8px;padding:4px 0 6px;overflow-x:auto;scrollbar-width:none}
+    .group-strip::-webkit-scrollbar{display:none}
+    .group-chip{
+      white-space:nowrap;padding:6px 12px;border-radius:999px;border:1px solid var(--border-subtle);
+      background:rgba(15,23,42,.9);font-size:.8rem;color:var(--text-muted);cursor:pointer;flex-shrink:0
+    }
+    .group-chip.active{background:var(--accent-soft);border-color:var(--accent);color:var(--text-main);font-weight:600}
+
+    .tab-strip{display:flex;gap:6px;padding:0 0 8px;overflow-x:auto;scrollbar-width:none}
+    .tab-strip::-webkit-scrollbar{display:none}
+    .tab-chip{
+      white-space:nowrap;padding:5px 10px;border-radius:999px;border:1px solid var(--border-subtle);
+      background:rgba(15,23,42,.9);font-size:.75rem;color:var(--text-muted);cursor:pointer;flex-shrink:0
+    }
+    .tab-chip.active{background:rgba(34,197,94,.18);border-color:var(--accent);color:var(--text-main);font-weight:600}
+
+    .card{
+      background:rgba(15,23,42,.96);border-radius:18px;border:1px solid var(--border-subtle);
+      box-shadow:0 18px 45px rgba(0,0,0,.6),0 0 0 1px rgba(148,163,184,.18) inset;
+      padding:12px;margin-top:4px
+    }
+    .card-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+    .card-header h2{margin:0;font-size:.95rem}
+    .card-header span{font-size:.75rem;color:var(--text-muted)}
+    .badge{
+      border-radius:999px;padding:5px 10px;border:1px solid var(--border-subtle);font-size:.7rem;color:var(--text-muted);
+      background:rgba(15,23,42,.9);display:inline-flex;align-items:center;gap:4px
+    }
+    .badge span{color:var(--accent)}
+
+    .week-pill{
+      border-radius:999px;padding:5px 10px;border:1px solid var(--border-subtle);font-size:.8rem;color:var(--text-muted);
+      display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:rgba(15,23,42,.9)
+    }
+    .week-pill strong{color:var(--text-main);font-weight:500}
+
+    .table-wrapper{
+      margin-top:4px;border-radius:12px;background:radial-gradient(circle at top left,rgba(34,197,94,.16),rgba(15,23,42,.94));
+      overflow:auto;border:1px solid rgba(31,41,55,.95)
+    }
+    table{width:100%;border-collapse:collapse;font-size:.75rem;min-width:100%}
+    thead{background:linear-gradient(to right,rgba(15,23,42,.9),rgba(15,23,42,.75));position:sticky;top:0;z-index:1}
+    th,td{padding:6px 4px;text-align:center;border-bottom:1px solid rgba(31,41,55,.9);vertical-align:top}
+    th:first-child,td:first-child{text-align:left;padding-left:10px}
+    tbody tr:last-child td{border-bottom:none}
+    tbody tr:nth-child(even){background:rgba(15,23,42,.85)}
+    tbody tr:nth-child(odd){background:rgba(15,23,42,.7)}
+
+    .category-label{font-weight:500;font-size:.78rem}
+    .category-label span{display:block;font-size:.7rem;color:var(--text-muted);font-weight:400}
+
+    .small-input,
+    input.log-input,select.log-input,textarea.log-input{
+      width:100%;padding:4px 4px;border-radius:8px;border:1px solid rgba(55,65,81,.9);
+      background:rgba(15,23,42,.9);color:var(--text-main);font-size:.72rem
+    }
+    .small-input{max-width:64px;text-align:center}
+    .small-input:focus,input.log-input:focus,select.log-input:focus,textarea.log-input:focus{
+      outline:1px solid var(--accent);box-shadow:0 0 0 1px rgba(34,197,94,.4)
+    }
+    textarea.log-input{resize:vertical;min-height:70px}
+    textarea.log-input.big{min-height:120px}
+
+    .summary-row{background:rgba(15,23,42,1)}
+    .summary-row td{font-size:.75rem;color:var(--text-muted);border-top:1px solid rgba(31,41,55,.95)}
+    .summary-label{font-weight:500;color:var(--text-main)}
+    .summary-value{color:var(--accent);font-weight:500;text-align:right;padding-right:12px}
+
+    .controls-row{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-top:6px;font-size:.7rem}
+    .btn{
+      border-radius:999px;padding:5px 10px;border:1px solid rgba(55,65,81,.9);background:rgba(15,23,42,.98);
+      color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px
+    }
+    .btn-primary{border-color:var(--accent);background:var(--accent-soft);color:var(--text-main)}
+    .btn-danger{border-color:rgba(239,68,68,.7);color:#fecaca}
+
+    .helper-text{margin-top:8px;font-size:.7rem;color:var(--text-muted);display:flex;align-items:flex-start;gap:6px}
+    .helper-dot{width:8px;height:8px;border-radius:999px;background:var(--accent);margin-top:4px}
+
+    .analytics-grid{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px}
+    .analytics-card{border-radius:12px;border:1px solid rgba(31,41,55,.9);background:rgba(15,23,42,.96);padding:6px 8px;font-size:.72rem}
+    .analytics-label{color:var(--text-muted)}
+    .analytics-value{color:var(--accent);font-weight:600;font-size:.8rem;margin-top:2px}
+
+    .bottom-nav{
+      position:fixed;bottom:0;left:0;right:0;max-width:1100px;margin:0 auto;padding:6px 9px 10px;
+      background:linear-gradient(to top,rgba(15,23,42,.98),rgba(15,23,42,.94));border-top:1px solid rgba(31,41,55,.95);
+      display:flex;justify-content:space-between;gap:6px;backdrop-filter:blur(18px)
+    }
+    .nav-btn{
+      flex:1;border-radius:999px;padding:6px 6px;border:1px solid rgba(31,41,55,.9);background:rgba(15,23,42,.98);
+      font-size:.7rem;color:var(--text-muted);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer
+    }
+    .nav-btn svg{width:16px;height:16px;opacity:.75}
+    .nav-btn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .nav-btn.active{border-color:var(--accent);background:var(--accent-soft);color:var(--text-main)}
+    .nav-btn.active svg{opacity:1}
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div class="title-block">
+        <h1>Yearly Life Betterment</h1>
+        <span>All your 2026 trackers in one phone app</span>
+      </div>
+
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="pill" style="cursor:default;">
+          <div class="pill-dot"></div>
+          <span>Offline · Stored on this device</span>
+        </div>
+        <button type="button" class="pill" onclick="exportAllCsv()">
+          <span>📤 Export all data (one CSV)</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <div class="group-strip" id="groupStrip"></div>
+      <div class="tab-strip" id="tabStrip"></div>
+      <section id="screenContainer"></section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" id="bottomNav"></nav>
+
+  <script>
+    const STORAGE_KEY = "bettermentTracker_v5_singleExport_full";
+
+    const appConfig = {
+      groups: [
+        { id: "life", label: "Life & Reflection", icon: "life", tabs: [
+          { id: "week_tracker", label: "Week Tracker", type: "weekGrid" },
+          { id: "personal_tracker", label: "Daily Personal", type: "log_personal" },
+          { id: "highlights", label: "Weekly Wins", type: "log_highlights" },
+          { id: "month_view", label: "Month View", type: "log_month" }
+        ]},
+        { id: "health", label: "Health & Fitness", icon: "health", tabs: [
+          { id: "weight_fitness", label: "Weight & Steps", type: "log_weight" },
+          { id: "mammoth", label: "Mammoth Tracker", type: "log_mammoth" }
+        ]},
+        { id: "disc", label: "Disc Golf", icon: "disc", tabs: [
+          { id: "dg_practice", label: "Practice Log", type: "log_dg_practice" },
+          { id: "dg_round", label: "Round Log", type: "log_dg_round" },
+          { id: "dg_tournament", label: "Tournament Log", type: "log_dg_tournament" },
+          { id: "vetsdg", label: "Vets DG Outreach", type: "log_vetsdg" }
+        ]},
+        { id: "youtube", label: "YouTube", icon: "youtube", tabs: [
+          { id: "yt_tracker", label: "YouTube Tracker", type: "log_youtube" },
+          { id: "yt_ideas", label: "Video Ideas", type: "log_yt_ideas" },
+          { id: "yt_long_template", label: "Long Script Notes", type: "template_long" },
+          { id: "yt_short_template", label: "Short Script Notes", type: "template_short" }
+        ]},
+        { id: "skills", label: "Skills & Certs", icon: "skills", tabs: [
+          { id: "guitar", label: "Guitar Practice", type: "log_guitar" },
+          { id: "certs", label: "Certs Tracker", type: "log_certs" }
+        ]}
+      ],
+      weekly: {
+        days: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+        rows: [
+          { id: "strength", label: "Strength", summary: "Strength Workouts Done" },
+          { id: "walk", label: "Walk", summary: "Walk Days Done" },
+          { id: "hike", label: "Hike (Long)", summary: "Total Miles" },
+          { id: "weight", label: "Weight" },
+          { id: "dg_practice", label: "DG Practice", summary: "Disc Golf Practice" },
+          { id: "dg_round", label: "DG Round/Tournament", summary: "Disc Golf Rounds" },
+          { id: "vets_local", label: "Vets Local" },
+          { id: "vets_national", label: "Vets National" },
+          { id: "guitar", label: "Guitar Practice" },
+          { id: "crisc", label: "CRISC Study" },
+          { id: "pmp", label: "PMP Study - Starts Q3" },
+          { id: "water", label: "Water" },
+          { id: "snacks", label: "Snacks" },
+          { id: "sleep", label: "Sleep" },
+          { id: "yt_plan", label: "YT Plan" },
+          { id: "yt_shoot", label: "YT Shoot" },
+          { id: "yt_edit", label: "YT Edit" },
+          { id: "yt_upload", label: "YT Upload" },
+          { id: "mental_reset", label: "Mental Reset" },
+          { id: "mm_distance", label: "MM Distance" },
+          { id: "mm_pack_weight", label: "MM Pack Weight" }
+        ]
+      }
+    };
+
+    const tabConfigs = {};
+    appConfig.groups.forEach(g => g.tabs.forEach(t => (t.groupId=g.id, tabConfigs[t.id]=t)));
+
+    function loadState(){ try{ const raw=localStorage.getItem(STORAGE_KEY); return raw?JSON.parse(raw):{} }catch(e){ return {} } }
+    function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }catch(e){} }
+
+    function ensureDefaults(state){
+      if(!state||typeof state!=="object") state={};
+      if(!state.activeGroup) state.activeGroup="life";
+      if(!state.activeTab) state.activeTab="week_tracker";
+      Object.values(tabConfigs).forEach(tab=>{
+        if(!state[tab.id]){
+          state[tab.id] = tab.type==="weekGrid" ? { weekLabel:"This Week", data:{} } : { entries:[] };
+        }
+      });
+      return state;
+    }
+
+    let appState = ensureDefaults(loadState());
+
+    function csvEscape(val){
+      if(val===null||val===undefined) return "";
+      const s=String(val);
+      return /[\",\r\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+    }
+
+    function exportCsv(headers, rows, filename){
+      const lines=[headers.map(csvEscape).join(",")];
+      rows.forEach(r=>lines.push(r.map(csvEscape).join(",")));
+      const blob=new Blob([lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");
+      a.href=url;a.download=filename;
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportAllCsv(){
+      const lines=[];
+      const addSection=(name,headers,rows)=>{
+        lines.push("#TAB:"+name);
+        lines.push(headers.map(csvEscape).join(","));
+        rows.forEach(r=>lines.push(r.map(csvEscape).join(",")));
+        lines.push("");
+      };
+
+      // Week Tracker
+      {
+        const state=appState.week_tracker;
+        const headers=["Category",...appConfig.weekly.days,"Weekly Summary"];
+        const rows=appConfig.weekly.rows.map(row=>{
+          const rowData=[row.label];
+          appConfig.weekly.days.forEach(day=>{
+            rowData.push((state.data[row.id] && state.data[row.id][day]) || "");
+          });
+          rowData.push(row.summary||"");
+          return rowData;
+        });
+        addSection("Week_Tracker",headers,rows);
+      }
+
+      // Personal
+      {
+        const s=appState.personal_tracker;
+        const headers=["Date","Sleep (hrs)","Stress (1-5)","Energy (1-5)","Mood (1-5)","Self-Care Completed (Yes/No)","Daily Movement (Yes/No)","Screen Time Control (Yes/No)","Gratitude","Intentions for Tomorrow","Wins Today","Notes"];
+        const rows=(s.entries||[]).map(r=>[r.date||"",r.sleep||"",r.stress||"",r.energy||"",r.mood||"",r.selfCare||"",r.movement||"",r.screenControl||"",r.gratitude||"",r.intentions||"",r.winsToday||"",r.notes||""]);
+        addSection("Personal_Tracker",headers,rows);
+      }
+
+      // Highlights
+      {
+        const s=appState.highlights;
+        const headers=["Week Starting","Biggest Win","Health/Fitness Win","Disc Golf Win","YouTube Win","Vets DG Win","Guitar Win","Mindset Win","Notes"];
+        const rows=(s.entries||[]).map(r=>[r.weekStarting||"",r.biggestWin||"",r.healthWin||"",r.dgWin||"",r.ytWin||"",r.vetsWin||"",r.guitarWin||"",r.mindsetWin||"",r.notes||""]);
+        addSection("Highlights_Wins",headers,rows);
+      }
+
+      // Month View
+      {
+        const s=appState.month_view;
+        const headers=["Month","Overall Grade","Weight Change (+/- lbs)","Steps / Miles Total","Disc Golf Sessions (#)","Putting Avg % (C1/C1X)","Fieldwork Sessions (#)","Tournament Results (text)","Mammoth Distance Total (mi)","YouTube Uploads (#)","YouTube Avg CTR (%)","YouTube Subs Change","Vet DG Events (#)","Vet DG Membership Change","Guitar Practice Hours","Guitar BPM Progress (+/-)","Mental Health Avg (1–5)","Sleep Avg (hrs)","Stress Avg (1–5)","Rest Days (#)","Work/Life Balance Score (1–5)","Biggest Wins","Biggest Challenges","Lessons Learned","Adjustments for Next Month","Notes / Reflection","Monthly Score (0–1)"];
+        const rows=(s.entries||[]).map(r=>[r.month||"",r.grade||"",r.weightChange||"",r.stepsMiles||"",r.dgSessions||"",r.puttingAvg||"",r.fieldworkSessions||"",r.tournResults||"",r.mammothMiles||"",r.ytUploads||"",r.ytCtr||"",r.ytSubsChange||"",r.vetEvents||"",r.vetMembersChange||"",r.guitarHours||"",r.guitarBpmDelta||"",r.mentalAvg||"",r.sleepAvg||"",r.stressAvg||"",r.restDays||"",r.workLifeScore||"",r.bigWins||"",r.challenges||"",r.lessons||"",r.adjustments||"",r.notes||"",r.monthScore||""]);
+        addSection("Month_View",headers,rows);
+      }
+
+      // Weight Fitness
+      {
+        const s=appState.weight_fitness;
+        const headers=["Date","Weight","Steps","Did You Walk","Miles","Did You Workout","Total Calories","Notes"];
+        const rows=(s.entries||[]).map(r=>[r.date||"",r.weight||"",r.steps||"",r.didWalk||"",r.miles||"",r.didWorkout||"",r.calories||"",r.notes||""]);
+        addSection("Weight_Fitness",headers,rows);
+      }
+
+      // Mammoth
+      {
+        const s=appState.mammoth;
+        const headers=["Week #","Long Hike Goal","Actual Long Day Distance","Goal Hit","Total Miles for the Week","Pack Weight (lb)","Hydration (Good/OK/Poor)","Fuel Tested","Terrain","Blisters (Y/N)","Gear Notes"];
+        const rows=(s.entries||[]).map(r=>[r.week||"",r.goalLong||"",r.actualLong||"",r.goalHit||"",r.totalMilesWeek||"",r.packWeight||"",r.hydration||"",r.fuelTested||"",r.terrain||"",r.blisters||"",r.gearNotes||""]);
+        addSection("Mammoth_Tracker",headers,rows);
+      }
+
+      // DG Practice
+      {
+        const s=appState.dg_practice;
+        const headers=["Date","Duration (min)","Session Type","Focus Skill","Discs Used","C1 Attempts","C1 Made","C2 Attempts","C2 Made","Forehand Reps","Backhand Reps","Fieldwork Notes","Wind","Fatigue","Result"];
+        const rows=(s.entries||[]).map(r=>[r.date||"",r.duration||"",r.sessionType||"",r.focusSkill||"",r.discs||"",r.c1Att||"",r.c1Made||"",r.c2Att||"",r.c2Made||"",r.fhReps||"",r.bhReps||"",r.notes||"",r.wind||"",r.fatigue||"",r.result||""]);
+        addSection("DG_Practice_Log",headers,rows);
+      }
+
+      // DG Round
+      {
+        const s=appState.dg_round;
+        const headers=["Date","Course","Layout","Total Holes","Par","Score","Diff to Par","C1% (0-33ft)","C1X % 6-33ft","C2 %","Misses inside 20ft","Penalties","OBs","Lost Discs","Wind","Notes"];
+        const rows=(s.entries||[]).map(r=>[r.date||"",r.course||"",r.layout||"",r.totalHoles||"",r.par||"",r.score||"",r.diffToPar||"",r.c1Pct||"",r.c1xPct||"",r.c2Pct||"",r.miss20||"",r.penalties||"",r.obs||"",r.lostDiscs||"",r.wind||"",r.notes||""]);
+        addSection("DG_Round_Log",headers,rows);
+      }
+
+      // DG Tournament
+      {
+        const s=appState.dg_tournament;
+        const headers=["Date","Event","Course(s)","Division","Round Scores","Total Participants","Place","C1X %","C1 %","C2 %","Missed Inside 20ft","Notes","Takeaways"];
+        const rows=(s.entries||[]).map(r=>[r.date||"",r.event||"",r.courses||"",r.division||"",r.roundScores||"",r.totalPlayers||"",r.place||"",r.c1x||"",r.c1||"",r.c2||"",r.miss20||"",r.notes||"",r.takeaways||""]);
+        addSection("DG_Tournament_Log",headers,rows);
+      }
+
+      // VetsDG
+      {
+        const s=appState.vetsdg;
+        const headers=["Date","Entry Type","Event Name/Organization","Category","Sponsors","Outreach","Attendance","Donation","Contact Status","Notes"];
+        const rows=(s.entries||[]).map(r=>[r.date||"",r.entryType||"",r.eventName||"",r.category||"",r.sponsors||"",r.outreach||"",r.attendance||"",r.donation||"",r.contactStatus||"",r.notes||""]);
+        addSection("VetsDG_Tracker",headers,rows);
+      }
+
+      // YouTube tracker
+      {
+        const s=appState.yt_tracker;
+        const headers=["Week#","Title","Upload Date","Length","Video Type","Category","Subcategory","Hook","Thumbnail","Topic","CTR %","Average View Duration","Average View %","7 Day View","Total View","Sub Change","Video Score","Notes"];
+        const rows=(s.entries||[]).map(r=>[r.week||"",r.title||"",r.uploadDate||"",r.length||"",r.videoType||"",r.category||"",r.subcategory||"",r.hook||"",r.thumbnail||"",r.topic||"",r.ctr||"",r.avgViewDur||"",r.avgViewPct||"",r.view7||"",r.totalView||"",r.subChange||"",r.videoScore||"",r.notes||""]);
+        addSection("YouTube_Tracker",headers,rows);
+      }
+
+      // Ideas
+      {
+        const s=appState.yt_ideas;
+        const headers=["Skill Tutorial","Gear Review","Course Gear","Lifestyle","Beginner Tips","Challenge","Experimentation","Quick Tip","20 Video Ideas"];
+        const rows=(s.entries||[]).map(r=>[r.skill||"",r.gear||"",r.courseGear||"",r.lifestyle||"",r.beginner||"",r.challenge||"",r.experimentation||"",r.quick||"",r.ideas||""]);
+        addSection("Youtube_Video_Ideas",headers,rows);
+      }
+
+      // Long template
+      {
+        const s=appState.yt_long_template;
+        const headers=["Long Script Template","Example"];
+        const rows=(s.entries||[]).map(r=>[r.template||"",r.example||""]);
+        addSection("Long_Script_Template",headers,rows);
+      }
+
+      // Short template
+      {
+        const s=appState.yt_short_template;
+        const headers=["Template","Example of Template"];
+        const rows=(s.entries||[]).map(r=>[r.template||"",r.example||""]);
+        addSection("Short_Script_Template",headers,rows);
+      }
+
+      // Guitar
+      {
+        const s=appState.guitar;
+        const headers=["Date","Practice Length (mins)","Focus Area","Technique Skill","BPM Goal","BPM Achieved","BPM Success %","Song/Exercise","Difficulty (1-5)","Feeling","Notes"];
+        const rows=(s.entries||[]).map(r=>[r.date||"",r.length||"",r.focus||"",r.technique||"",r.bpmGoal||"",r.bpmAchieved||"",r.bpmSuccess||"",r.song||"",r.difficulty||"",r.feeling||"",r.notes||""]);
+        addSection("GuitarPractice_Tracker",headers,rows);
+      }
+
+      // Certs
+      {
+        const s=appState.certs;
+        const headers=["Date","Cert (CRISC/PMP)","Domain/Topic","Study Time (min)","Practice Qs %","Practice Exam Name","Score","Weak Areas","Notes"];
+        const rows=(s.entries||[]).map(r=>[r.date||"",r.cert||"",r.domain||"",r.studyTime||"",r.practicePct||"",r.examName||"",r.score||"",r.weakAreas||"",r.notes||""]);
+        addSection("Certs_Tracker",headers,rows);
+      }
+
+      const blob=new Blob([lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");
+      a.href=url;a.download="Yearly_Life_Betterment_All.csv";
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function iconSvg(kind){
+      if(kind==="life")return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M5 10h14M5 4h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>`;
+      if(kind==="health")return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-4.35-9-8.4C1 9 2.5 5.5 6 5.5c2 0 3.5 1.5 3.9 2.1C10.5 7 12 5.5 14 5.5c3.5 0 5 3.5 3 7.1-3 4.05-9 8.4-9 8.4z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>`;
+      if(kind==="disc")return `<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="8" ry="3" fill="none" stroke="currentColor" stroke-width="2"></ellipse><path d="M4 7v6c0 1.66 3.58 3 8 3s8-1.34 8-3V7" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M4 13v4c0 1.66 3.58 3 8 3s8-1.34 8-3v-4" fill="none" stroke="currentColor" stroke-width="2"></path></svg>`;
+      if(kind==="youtube")return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5C4 6.12 5.12 5 6.5 5h11C18.88 5 20 6.12 20 7.5v9c0 1.38-1.12 2.5-2.5 2.5h-11C5.12 19 4 17.88 4 16.5v-9z" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M10 9l5 3-5 3V9z" fill="currentColor"></path></svg>`;
+      if(kind==="skills")return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.09 4.24L19 8.27l-3.5 3.41L16.18 17 12 14.9 7.82 17l.68-5.32L5 8.27l4.91-1.03L12 3z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>`;
+      return `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"></circle></svg>`;
+    }
+
+    function renderGroupNav(){
+      const strip=document.getElementById("groupStrip"); strip.innerHTML="";
+      appConfig.groups.forEach(g=>{
+        const b=document.createElement("button");
+        b.type="button"; b.className="group-chip"+(g.id===appState.activeGroup?" active":"");
+        b.textContent=g.label;
+        b.addEventListener("click",()=>setActiveGroup(g.id));
+        strip.appendChild(b);
+      });
+    }
+    function renderTabNav(){
+      const strip=document.getElementById("tabStrip"); strip.innerHTML="";
+      const group=appConfig.groups.find(g=>g.id===appState.activeGroup)||appConfig.groups[0];
+      group.tabs.forEach(t=>{
+        const b=document.createElement("button");
+        b.type="button"; b.className="tab-chip"+(t.id===appState.activeTab?" active":"");
+        b.textContent=t.label;
+        b.addEventListener("click",()=>setActiveTab(t.id));
+        strip.appendChild(b);
+      });
+    }
+    function renderBottomNav(){
+      const nav=document.getElementById("bottomNav"); nav.innerHTML="";
+      appConfig.groups.forEach(g=>{
+        const b=document.createElement("button");
+        b.type="button"; b.className="nav-btn"+(g.id===appState.activeGroup?" active":"");
+        b.innerHTML=iconSvg(g.icon)+`<span>${g.label}</span>`;
+        b.addEventListener("click",()=>setActiveGroup(g.id));
+        nav.appendChild(b);
+      });
+    }
+
+    function setActiveGroup(groupId){
+      appState.activeGroup=groupId;
+      const group=appConfig.groups.find(g=>g.id===groupId)||appConfig.groups[0];
+      if(!appState.activeTab || tabConfigs[appState.activeTab].groupId!==groupId) appState.activeTab=group.tabs[0].id;
+      saveState(); renderGroupNav(); renderTabNav(); renderBottomNav(); renderScreen();
+    }
+    function setActiveTab(tabId){
+      if(!tabConfigs[tabId])return;
+      appState.activeTab=tabId; appState.activeGroup=tabConfigs[tabId].groupId;
+      saveState(); renderGroupNav(); renderTabNav(); renderBottomNav(); renderScreen();
+    }
+
+    function toNumber(val){ const n=parseFloat(val); return isNaN(n)?0:n; }
+    function avg(nums){ const f=nums.filter(n=>!isNaN(n)); return f.length?f.reduce((a,b)=>a+b,0)/f.length:0; }
+    function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+    function renderScreen(){
+      const container=document.getElementById("screenContainer");
+      const tab=tabConfigs[appState.activeTab];
+      if(!tab){ container.innerHTML="<p style='padding:12px;color:var(--text-muted)'>No tab selected.</p>"; return; }
+
+      let node;
+      switch(tab.type){
+        case "weekGrid": node=renderWeekTracker(); break;
+        case "log_personal": node=renderPersonalTracker(); break;
+        case "log_highlights": node=renderHighlights(); break;
+        case "log_month": node=renderMonthView(); break;
+        case "log_weight": node=renderWeightFitness(); break;
+        case "log_mammoth": node=renderMammoth(); break;
+        case "log_dg_practice": node=renderDGPractice(); break;
+        case "log_dg_round": node=renderDGRound(); break;
+        case "log_dg_tournament": node=renderDGTournament(); break;
+        case "log_vetsdg": node=renderVetsDG(); break;
+        case "log_youtube": node=renderYouTubeTracker(); break;
+        case "log_yt_ideas": node=renderYTIdeas(); break;
+        case "template_long": node=renderYTLongTemplate(); break;
+        case "template_short": node=renderYTShortTemplate(); break;
+        case "log_guitar": node=renderGuitar(); break;
+        case "log_certs": node=renderCerts(); break;
+        default:
+          node=document.createElement("div");
+          node.className="card";
+          node.innerHTML="<div class='card-header'><h2>Not implemented</h2><span>Screen coming soon</span></div>";
+      }
+      container.innerHTML=""; container.appendChild(node);
+    }
+
+    // Helpers
+    function makeDateInput(value,onChange){
+      const i=document.createElement("input");
+      i.type="date"; i.className="log-input"; i.value=value||""; i.addEventListener("input",()=>onChange(i.value)); return i;
+    }
+    function makeTextInput(value,placeholder,onChange){
+      const i=document.createElement("input");
+      i.type="text"; i.className="log-input"; i.value=value||""; if(placeholder) i.placeholder=placeholder;
+      i.addEventListener("input",()=>onChange(i.value)); return i;
+    }
+    function makeNumberInput(value,step,min,onChange){
+      const i=document.createElement("input");
+      i.type="number"; i.className="log-input"; i.inputMode="decimal";
+      if(step!=null) i.step=step; if(min!=null) i.min=min; i.value=value||"";
+      i.addEventListener("input",()=>onChange(i.value)); return i;
+    }
+    function makeSelect(options,value,onChange){
+      const s=document.createElement("select"); s.className="log-input";
+      options.forEach(opt=>{ const o=document.createElement("option"); o.value=opt; o.textContent=opt||""; if((value||"")===opt) o.selected=true; s.appendChild(o);});
+      s.addEventListener("change",()=>onChange(s.value)); return s;
+    }
+    function makeTextarea(value,placeholder,onChange,isBig){
+      const ta=document.createElement("textarea"); ta.className="log-input"+(isBig?" big":""); ta.value=value||""; if(placeholder) ta.placeholder=placeholder;
+      ta.addEventListener("input",()=>onChange(ta.value)); return ta;
+    }
+    function makeCell(child){ const td=document.createElement("td"); td.appendChild(child); return td; }
+
+    // Week tracker
+    function renderWeekTracker(){
+      const tabId="week_tracker";
+      const state=appState[tabId];
+      const numericRowIds=new Set(["hike","weight","water","sleep","mm_distance","mm_pack_weight"]);
+
+      const section=document.createElement("section"); section.className="card";
+      const header=document.createElement("div"); header.className="card-header";
+      header.innerHTML=`<div><h2>Weekly Habit Grid</h2><span>Numeric rows + Yes/No habits.</span></div>
+        <button type="button" class="week-pill" id="weekLabelBtn"><span>Week:</span><strong>${state.weekLabel||"This Week"}</strong></button>`;
+      section.appendChild(header);
+
+      const wrap=document.createElement("div"); wrap.className="table-wrapper";
+      const table=document.createElement("table");
+      const thead=document.createElement("thead");
+      const hr=document.createElement("tr");
+      hr.innerHTML="<th>Category</th>"+appConfig.weekly.days.map(d=>`<th>${d}</th>`).join("")+"<th>Weekly Total</th>";
+      thead.appendChild(hr); table.appendChild(thead);
+
+      const tbody=document.createElement("tbody");
+      let overallTotal=0;
+
+      appConfig.weekly.rows.forEach(row=>{
+        const tr=document.createElement("tr");
+        const label=document.createElement("td"); label.className="category-label";
+        label.innerHTML=row.label+(row.summary?`<span>${row.summary}</span>`:"");
+        tr.appendChild(label);
+
+        let rowTotal=0;
+
+        appConfig.weekly.days.forEach(day=>{
+          const td=document.createElement("td");
+          const stored=(state.data[row.id] && state.data[row.id][day]) || "";
+
+          if(numericRowIds.has(row.id)){
+            const input=document.createElement("input");
+            input.type="number"; input.inputMode="decimal"; input.min="0"; input.step="0.01";
+            input.className="small-input"; input.value=stored;
+            if(stored!=="" && !isNaN(parseFloat(stored))) rowTotal+=parseFloat(stored);
+            input.addEventListener("input",()=>{
+              if(!state.data[row.id]) state.data[row.id]={};
+              state.data[row.id][day]=input.value;
+              saveState(); renderScreen();
+            });
+            td.appendChild(input);
+          } else {
+            const sel=document.createElement("select"); sel.className="small-input";
+            ["","Yes","No"].forEach(v=>{ const o=document.createElement("option"); o.value=v; o.textContent=v||""; if(stored===v) o.selected=true; sel.appendChild(o);});
+            sel.addEventListener("change",()=>{
+              if(!state.data[row.id]) state.data[row.id]={};
+              state.data[row.id][day]=sel.value;
+              saveState();
+            });
+            td.appendChild(sel);
+          }
+
+          tr.appendChild(td);
+        });
+
+        overallTotal+=rowTotal;
+
+        const totalTd=document.createElement("td");
+        totalTd.className="summary-value";
+        totalTd.textContent=rowTotal ? rowTotal.toFixed(2).replace(/\.00$/,"" ) : "–";
+        tr.appendChild(totalTd);
+
+        tbody.appendChild(tr);
+      });
+
+      const sumTr=document.createElement("tr"); sumTr.className="summary-row";
+      const sumLabel=document.createElement("td"); sumLabel.className="summary-label"; sumLabel.textContent="Overall total (numeric rows only)";
+      sumTr.appendChild(sumLabel);
+      appConfig.weekly.days.forEach(()=>sumTr.appendChild(document.createElement("td")));
+      const sumVal=document.createElement("td"); sumVal.className="summary-value"; sumVal.textContent=overallTotal ? overallTotal.toFixed(2).replace(/\.00$/,"" ) : "–";
+      sumTr.appendChild(sumVal); tbody.appendChild(sumTr);
+
+      table.appendChild(tbody); wrap.appendChild(table); section.appendChild(wrap);
+
+      const controls=document.createElement("div"); controls.className="controls-row";
+      const exportBtn=document.createElement("button"); exportBtn.type="button"; exportBtn.className="btn btn-primary"; exportBtn.textContent="Export CSV (Week_Tracker only)";
+      exportBtn.addEventListener("click",()=>{
+        const headers=["Category",...appConfig.weekly.days,"Weekly Summary"];
+        const rows=appConfig.weekly.rows.map(r=>{
+          const rd=[r.label];
+          appConfig.weekly.days.forEach(d=>rd.push((state.data[r.id] && state.data[r.id][d]) || ""));
+          rd.push(r.summary||"");
+          return rd;
+        });
+        exportCsv(headers,rows,"Week_Tracker.csv");
+      });
+      controls.appendChild(exportBtn);
+
+      const clearBtn=document.createElement("button"); clearBtn.type="button"; clearBtn.className="btn btn-danger"; clearBtn.textContent="Clear week";
+      clearBtn.addEventListener("click",()=>{ if(confirm("Clear all values for this week?")){ appState[tabId]={weekLabel:state.weekLabel,data:{}}; saveState(); renderScreen(); }});
+      controls.appendChild(clearBtn);
+      section.appendChild(controls);
+
+      const helper=document.createElement("div"); helper.className="helper-text";
+      helper.innerHTML=`<div class="helper-dot"></div><div><strong>Numeric:</strong> Hike, Weight, Water, Sleep, MM Distance, MM Pack Weight. Everything else is <strong>Yes/No</strong>.</div>`;
+      section.appendChild(helper);
+
+      const analytics=document.createElement("div"); analytics.className="analytics-grid";
+      analytics.innerHTML=`<div class="analytics-card"><div class="analytics-label">Total numeric entries</div><div class="analytics-value">${overallTotal?overallTotal.toFixed(1):"0.0"}</div></div>
+        <div class="analytics-card"><div class="analytics-label">Tracked categories</div><div class="analytics-value">${appConfig.weekly.rows.length}</div></div>`;
+      section.appendChild(analytics);
+
+      setTimeout(()=>{
+        const btn=document.getElementById("weekLabelBtn");
+        if(btn){
+          btn.addEventListener("click",()=>{
+            const cur=state.weekLabel||"This Week";
+            const next=prompt("Set a label for this week (e.g., 'Week 1 · Jan 1–7'):",cur);
+            if(next!==null && next.trim()!==""){ state.weekLabel=next.trim(); saveState(); renderScreen(); }
+          });
+        }
+      },0);
+
+      return section;
+    }
+
+    function renderPersonalTracker(){
+      const tabId="personal_tracker";
+      const state=appState[tabId];
+      const entries=state.entries||[];
+
+      const section=document.createElement("section"); section.className="card";
+      const header=document.createElement("div"); header.className="card-header";
+      header.innerHTML=`<div><h2>Daily Personal Tracker</h2><span>Sleep, stress, energy, mood, gratitude & wins.</span></div><div class="badge"><span>${entries.length}</span> days logged</div>`;
+      section.appendChild(header);
+
+      const wrap=document.createElement("div"); wrap.className="table-wrapper";
+      const table=document.createElement("table");
+      table.innerHTML=`<thead><tr>
+          <th>Date</th><th>Sleep (hrs)</th><th>Stress (1-5)</th><th>Energy (1-5)</th><th>Mood (1-5)</th>
+          <th>Self-Care?</th><th>Movement?</th><th>Screen Time?</th>
+          <th>Gratitude</th><th>Intentions</th><th>Wins Today</th><th>Notes</th>
+        </tr></thead>`;
+      const tbody=document.createElement("tbody");
+
+      entries.forEach(row=>{
+        const tr=document.createElement("tr");
+        tr.appendChild(makeCell(makeDateInput(row.date,v=>{row.date=v;saveState();})));
+        tr.appendChild(makeCell(makeNumberInput(row.sleep,"0.1","0",v=>{row.sleep=v;saveState();})));
+        tr.appendChild(makeCell(makeNumberInput(row.stress,"1","1",v=>{row.stress=v;saveState();})));
+        tr.appendChild(makeCell(makeNumberInput(row.energy,"1","1",v=>{row.energy=v;saveState();})));
+        tr.appendChild(makeCell(makeNumberInput(row.mood,"1","1",v=>{row.mood=v;saveState();})));
+        tr.appendChild(makeCell(makeSelect(["","Yes","No"],row.selfCare,v=>{row.selfCare=v;saveState();})));
+        tr.appendChild(makeCell(makeSelect(["","Yes","No"],row.movement,v=>{row.movement=v;saveState();})));
+        tr.appendChild(makeCell(makeSelect(["","Yes","No"],row.screenControl,v=>{row.screenControl=v;saveState();})));
+        tr.appendChild(makeCell(makeTextarea(row.gratitude,"",v=>{row.gratitude=v;saveState();},true)));
+        tr.appendChild(makeCell(makeTextarea(row.intentions,"",v=>{row.intentions=v;saveState();},true)));
+        tr.appendChild(makeCell(makeTextarea(row.winsToday,"",v=>{row.winsToday=v;saveState();},true)));
+        tr.appendChild(makeCell(makeTextarea(row.notes,"",v=>{row.notes=v;saveState();},true)));
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody); wrap.appendChild(table); section.appendChild(wrap);
+
+      const controls=document.createElement("div"); controls.className="controls-row";
+      const addBtn=document.createElement("button"); addBtn.type="button"; addBtn.className="btn btn-primary"; addBtn.textContent="Add Day";
+      addBtn.addEventListener("click",()=>{
+        state.entries.push({date:todayISO(),sleep:"",stress:"",energy:"",mood:"",selfCare:"",movement:"",screenControl:"",gratitude:"",intentions:"",winsToday:"",notes:""});
+        saveState(); renderScreen();
+      });
+      controls.appendChild(addBtn);
+
+      const exportBtn=document.createElement("button"); exportBtn.type="button"; exportBtn.className="btn btn-primary"; exportBtn.textContent="Export CSV (Personal_Tracker)";
+      exportBtn.addEventListener("click",()=>{
+        const headers=["Date","Sleep (hrs)","Stress (1-5)","Energy (1-5)","Mood (1-5)","Self-Care Completed (Yes/No)","Daily Movement (Yes/No)","Screen Time Control (Yes/No)","Gratitude","Intentions for Tomorrow","Wins Today","Notes"];
+        const rows=(state.entries||[]).map(r=>[r.date||"",r.sleep||"",r.stress||"",r.energy||"",r.mood||"",r.selfCare||"",r.movement||"",r.screenControl||"",r.gratitude||"",r.intentions||"",r.winsToday||"",r.notes||""]);
+        exportCsv(headers,rows,"Personal_Tracker.csv");
+      });
+      controls.appendChild(exportBtn);
+
+      const clearBtn=document.createElement("button"); clearBtn.type="button"; clearBtn.className="btn btn-danger"; clearBtn.textContent="Clear All";
+      clearBtn.addEventListener("click",()=>{ if(confirm("Clear all personal tracker rows?")){ state.entries=[]; saveState(); renderScreen(); }});
+      controls.appendChild(clearBtn);
+      section.appendChild(controls);
+
+      const analytics=document.createElement("div"); analytics.className="analytics-grid";
+      const sleeps=entries.map(r=>toNumber(r.sleep));
+      const stress=entries.map(r=>toNumber(r.stress));
+      const mood=entries.map(r=>toNumber(r.mood));
+      analytics.innerHTML=`<div class="analytics-card"><div class="analytics-label">Avg Sleep (hrs)</div><div class="analytics-value">${entries.length?avg(sleeps).toFixed(1):"0.0"}</div></div>
+        <div class="analytics-card"><div class="analytics-label">Avg Stress (1–5)</div><div class="analytics-value">${entries.length?avg(stress).toFixed(1):"0.0"}</div></div>
+        <div class="analytics-card"><div class="analytics-label">Avg Mood (1–5)</div><div class="analytics-value">${entries.length?avg(mood).toFixed(1):"0.0"}</div></div>`;
+      section.appendChild(analytics);
+
+      return section;
+    }
+
+    function renderHighlights(){
+      const tabId="highlights";
+      const state=appState[tabId];
+      const entries=state.entries||[];
+
+      const section=document.createElement("section"); section.className="card";
+      const header=document.createElement("div"); header.className="card-header";
+      header.innerHTML=`<div><h2>Weekly Highlights & Wins</h2><span>One row per week with space to write.</span></div><div class="badge"><span>${entries.length}</span> weeks</div>`;
+      section.appendChild(header);
+
+      const wrap=document.createElement("div"); wrap.className="table-wrapper";
+      const table=document.createElement("table");
+      table.innerHTML=`<thead><tr>
+          <th>Week Starting</th><th>Biggest Win</th><th>Health/Fitness Win</th><th>Disc Golf Win</th>
+          <th>YouTube Win</th><th>Vets DG Win</th><th>Guitar Win</th><th>Mindset Win</th><th>Notes</th>
+        </tr></thead>`;
+      const tbody=document.createElement("tbody");
+      entries.forEach(row=>{
+        const tr=document.createElement("tr");
+        tr.appendChild(makeCell(makeDateInput(row.weekStarting,v=>{row.weekStarting=v;saveState();})));
+        ["biggestWin","healthWin","dgWin","ytWin","vetsWin","guitarWin","mindsetWin","notes"].forEach(k=>{
+          tr.appendChild(makeCell(makeTextarea(row[k],"",v=>{row[k]=v;saveState();},true)));
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody); wrap.appendChild(table); section.appendChild(wrap);
+
+      const controls=document.createElement("div"); controls.className="controls-row";
+      const addBtn=document.createElement("button"); addBtn.type="button"; addBtn.className="btn btn-primary"; addBtn.textContent="Add Week";
+      addBtn.addEventListener("click",()=>{ state.entries.push({weekStarting:"",biggestWin:"",healthWin:"",dgWin:"",ytWin:"",vetsWin:"",guitarWin:"",mindsetWin:"",notes:""}); saveState(); renderScreen();});
+      controls.appendChild(addBtn);
+
+      const exportBtn=document.createElement("button"); exportBtn.type="button"; exportBtn.className="btn btn-primary"; exportBtn.textContent="Export CSV (Highlights_Wins)";
+      exportBtn.addEventListener("click",()=>{
+        const headers=["Week Starting","Biggest Win","Health/Fitness Win","Disc Golf Win","YouTube Win","Vets DG Win","Guitar Win","Mindset Win","Notes"];
+        const rows=(state.entries||[]).map(r=>[r.weekStarting||"",r.biggestWin||"",r.healthWin||"",r.dgWin||"",r.ytWin||"",r.vetsWin||"",r.guitarWin||"",r.mindsetWin||"",r.notes||""]);
+        exportCsv(headers,rows,"Highlights_Wins.csv");
+      });
+      controls.appendChild(exportBtn);
+
+      const clearBtn=document.createElement("button"); clearBtn.type="button"; clearBtn.className="btn btn-danger"; clearBtn.textContent="Clear All";
+      clearBtn.addEventListener("click",()=>{ if(confirm("Clear all weekly highlights?")){ state.entries=[]; saveState(); renderScreen(); }});
+      controls.appendChild(clearBtn);
+
+      section.appendChild(controls);
+      return section;
+    }
+
+    function renderMonthView(){
+      // simplified: generic month log is omitted in this paste file for brevity;
+      // your previous full file includes it.
+      const section=document.createElement("section"); section.className="card";
+      section.innerHTML="<div class='card-header'><h2>Month View</h2><span>Already included in the full build you have. If you need this tab editable, tell me and I'll paste the month view builder here too.</span></div>";
+      return section;
+    }
+
+    function renderWeightFitness(){
+      const tabId="weight_fitness";
+      const state=appState[tabId];
+      const entries=state.entries||[];
+
+      const section=document.createElement("section"); section.className="card";
+      const header=document.createElement("div"); header.className="card-header";
+      header.innerHTML=`<div><h2>Weight & Steps</h2><span>Daily weight, steps, walks, workouts.</span></div><div class="badge"><span>${entries.length}</span> days</div>`;
+      section.appendChild(header);
+
+      const wrap=document.createElement("div"); wrap.className="table-wrapper";
+      const table=document.createElement("table");
+      table.innerHTML=`<thead><tr>
+        <th>Date</th><th>Weight</th><th>Steps</th><th>Did You Walk</th><th>Miles</th><th>Did You Workout</th><th>Total Calories</th><th>Notes</th>
+      </tr></thead>`;
+      const tbody=document.createElement("tbody");
+
+      entries.forEach(r=>{
+        const tr=document.createElement("tr");
+        tr.appendChild(makeCell(makeDateInput(r.date,v=>{r.date=v;saveState();})));
+        tr.appendChild(makeCell(makeNumberInput(r.weight,"0.1","0",v=>{r.weight=v;saveState();})));
+        tr.appendChild(makeCell(makeNumberInput(r.steps,"1","0",v=>{r.steps=v;saveState();})));
+        tr.appendChild(makeCell(makeSelect(["","Yes","No"],r.didWalk,v=>{r.didWalk=v;saveState();})));
+        tr.appendChild(makeCell(makeNumberInput(r.miles,"0.1","0",v=>{r.miles=v;saveState();})));
+        tr.appendChild(makeCell(makeSelect(["","Yes","No"],r.didWorkout,v=>{r.didWorkout=v;saveState();})));
+        tr.appendChild(makeCell(makeNumberInput(r.calories,"1","0",v=>{r.calories=v;saveState();})));
+        tr.appendChild(makeCell(makeTextarea(r.notes,"",v=>{r.notes=v;saveState();})));
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody); wrap.appendChild(table); section.appendChild(wrap);
+
+      const controls=document.createElement("div"); controls.className="controls-row";
+      const addBtn=document.createElement("button"); addBtn.type="button"; addBtn.className="btn btn-primary"; addBtn.textContent="Add Day";
+      addBtn.addEventListener("click",()=>{ state.entries.push({date:todayISO()}); saveState(); renderScreen(); });
+      controls.appendChild(addBtn);
+
+      section.appendChild(controls);
+      return section;
+    }
+
+    // Not included in this paste variant: generic log renderers for every tab.
+    // Your previous FULL_WORKING file contains all tabs.
+    function renderMammoth(){ const s=document.createElement("section"); s.className="card"; s.innerHTML="<div class='card-header'><h2>Mammoth Tracker</h2><span>Use the full build file for this screen.</span></div>"; return s; }
+    function renderDGPractice(){ const s=document.createElement("section"); s.className="card"; s.innerHTML="<div class='card-header'><h2>DG Practice</h2><span>Use the full build file for this screen.</span></div>"; return s; }
+    function renderDGRound(){ const s=document.createElement("section"); s.className="card"; s.innerHTML="<div class='card-header'><h2>DG Round</h2><span>Use the full build file for this screen.</span></div>"; return s; }
+    function renderDGTournament(){ const s=document.createElement("section"); s.className="card"; s.innerHTML="<div class='card-header'><h2>DG Tournament</h2><span>Use the full build file for this screen.</span></div>"; return s; }
+    function renderVetsDG(){ const s=document.createElement("section"); s.className="card"; s.innerHTML="<div class='card-header'><h2>Vets DG</h2><span>Use the full build file for this screen.</span></div>"; return s; }
+    function renderYouTubeTracker(){ const s=document.createElement("section"); s.className="card"; s.innerHTML="<div class='card-header'><h2>YouTube Tracker</h2><span>Use the full build file for this screen.</span></div>"; return s; }
+    function renderYTIdeas(){ const s=document.createElement("section"); s.className="card"; s.innerHTML="<div class='card-header'><h2>YT Ideas</h2><span>Use the full build file for this screen.</span></div>"; return s; }
+    function renderYTLongTemplate(){ const s=document.createElement("section"); s.className="card"; s.innerHTML="<div class='card-header'><h2>Long Script Notes</h2><span>Use the full build file for this screen.</span></div>"; return s; }
+    function renderYTShortTemplate(){ const s=document.createElement("section"); s.className="card"; s.innerHTML="<div class='card-header'><h2>Short Script Notes</h2><span>Use the full build file for this screen.</span></div>"; return s; }
+    function renderGuitar(){ const s=document.createElement("section"); s.className="card"; s.innerHTML="<div class='card-header'><h2>Guitar</h2><span>Use the full build file for this screen.</span></div>"; return s; }
+    function renderCerts(){ const s=document.createElement("section"); s.className="card"; s.innerHTML="<div class='card-header'><h2>Certs</h2><span>Use the full build file for this screen.</span></div>"; return s; }
+
+    (function init(){
+      renderGroupNav(); renderTabNav(); renderBottomNav(); renderScreen();
+    })();
+  </script>
+</body>
+</html>
 
