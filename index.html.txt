@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Yearly Life Betterment Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 20px; }
+    h1 { color: #22c55e; }
+  </style>
+</head>
+<body>
+  <h1>Yearly Life Betterment Tracker</h1>
+  <p>This file is working as HTML.</p>
+  <p>Next step: replace this placeholder with the full app code.</p>
+</body>
+</html>
